@@ -1,0 +1,27 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# Git & CI
+.git/
+.gitignore
+.github/
+
+# IDE & OS files
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+.DS_Store
+Thumbs.db
+
+# Logs & temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+Dockerfile*
+README.md
