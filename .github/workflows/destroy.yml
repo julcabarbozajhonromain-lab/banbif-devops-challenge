@@ -1,0 +1,48 @@
+name: Cleanup / Destroy Sandbox Infrastructure
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  destroy-infrastructure:
+    name: Destroy ECS & ECR Resources
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_wrapper: false
+
+      - name: Destroy ECS Cluster & Networking (infra/02-ecs-cluster)
+        working-directory: infra/02-ecs-cluster
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
+            -backend-config="key=ecs-cluster/terraform.tfstate" \
+            -backend-config="region=${{ secrets.AWS_REGION }}"
+          terraform destroy -auto-approve \
+            -var="aws_region=${{ secrets.AWS_REGION }}" \
+            -var="image_uri=dummy:latest"
+
+      - name: Destroy ECR Repository (infra/01-ecr)
+        working-directory: infra/01-ecr
+        run: |
+          terraform init \
+            -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
+            -backend-config="key=ecr/terraform.tfstate" \
+            -backend-config="region=${{ secrets.AWS_REGION }}"
+          terraform destroy -auto-approve \
+            -var="aws_region=${{ secrets.AWS_REGION }}"

@@ -1,0 +1,47 @@
+# Java & Maven
+target/
+*.jar
+*.war
+*.nar
+*.ear
+*.class
+.mvn/wrapper/maven-wrapper.jar
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+crash.log
+crash.*.log
+*.tfvars
+*.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+tfplan
+tfplan*
+
+# Docker
+*.docker.log
+
+# IDEs & System
+.idea/
+*.iml
+.vscode/
+.settings/
+.project
+.classpath
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Logs & temp files
+*.log
+*.tmp
+*.bak
+*.swp
