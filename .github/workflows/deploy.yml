@@ -13,9 +13,6 @@ jobs:
   build-and-push:
     name: Build & Push Image to ECR
     runs-on: ubuntu-latest
-    outputs:
-      image_uri: ${{ steps.export-image-uri.outputs.image_uri }}
-      repository_url: ${{ steps.ecr-infra.outputs.repository_url }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -62,13 +59,6 @@ jobs:
           docker push "$REPO_URL:$IMAGE_TAG"
           docker push "$REPO_URL:latest"
 
-      - name: Export Image URI Output
-        id: export-image-uri
-        run: |
-          IMAGE_URI="${{ steps.ecr-infra.outputs.repository_url }}:${{ github.sha }}"
-          echo "image_uri=$IMAGE_URI" >> "$GITHUB_OUTPUT"
-          echo "Image successfully built and tagged as $IMAGE_URI"
-
   deploy-ecs:
     name: Deploy to Amazon ECS Fargate
     needs: build-and-push
@@ -93,6 +83,10 @@ jobs:
         id: ecs-infra
         working-directory: infra/02-ecs-cluster
         run: |
+          AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          IMAGE_URI="${AWS_ACCOUNT_ID}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/banbif-java-app:${{ github.sha }}"
+          echo "Using Image URI: $IMAGE_URI"
+
           terraform init \
             -backend-config="bucket=${{ secrets.TF_STATE_BUCKET }}" \
             -backend-config="key=ecs-cluster/terraform.tfstate" \
@@ -100,7 +94,7 @@ jobs:
           terraform validate
           terraform apply -auto-approve \
             -var="aws_region=${{ secrets.AWS_REGION }}" \
-            -var="image_uri=${{ needs.build-and-push.outputs.image_uri }}"
+            -var="image_uri=${IMAGE_URI}"
 
           PUBLIC_URL=$(terraform output -raw public_endpoint_url)
           ALB_DNS=$(terraform output -raw alb_dns_name)
